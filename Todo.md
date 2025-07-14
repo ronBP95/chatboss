@@ -1,0 +1,4 @@
+-> Git Enabled
+-> Working on Python
+-> Create and activate a virtual environment
+-> Working on Tensorflow
