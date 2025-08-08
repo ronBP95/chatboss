@@ -1,5 +1,5 @@
 Flask
 flask-cors
-tensorflow-cpu>=2.15
+tensorflow
 tensorflow-hub
 numpy
