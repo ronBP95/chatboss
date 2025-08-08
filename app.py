@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow_hub as hub
@@ -5,7 +6,9 @@ import numpy as np
 from data import pairs
 
 app = Flask(__name__)
-CORS(app)
+
+# Restrict CORS to allow only requests from your static site
+CORS(app, origins=["https://chatboss-js-frontend.onrender.com"])
 
 # Load embedding model
 embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
@@ -31,4 +34,5 @@ def get_response():
     return jsonify({"response": bot_response})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=10000)
+    port = int(os.environ.get('PORT', 10000))  # Default to 10000 if PORT not set
+    app.run(debug=True, port=port, host='0.0.0.0')  # Ensure the app listens on all network interfaces
