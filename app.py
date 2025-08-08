@@ -1,86 +1,36 @@
-import streamlit as st
-import csv
-from datetime import datetime
-from core import get_response
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import tensorflow_hub as hub
+import numpy as np
+from data import pairs
 
-st.set_page_config(page_title="Chatbot", page_icon="💬", layout="centered")
-st.title("💇 Customer Support Chatbot")
+app = Flask(__name__)
 
-# Initialize session state
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+# ✅ Correct and simple CORS setup
+CORS(app)
 
-# CSV Logging
-LOG_FILE = "chat_logs.csv"
-def log_chat(user_input, response):
-    with open(LOG_FILE, mode="a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow([datetime.now().isoformat(), user_input, response])
+# Load embedding model
+embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
-# 🔁 Handle user input first
-with st.form(key="chat_form", clear_on_submit=True):
-    cols = st.columns([5, 1])
-    user_input = cols[0].text_input("Type your message:", placeholder="Ask me anything...", label_visibility="collapsed")
-    submitted = cols[1].form_submit_button("Send")
+# Prepare questions/responses
+questions = [q for q, a in pairs]
+responses = [a for q, a in pairs]
+question_embeddings = embed(questions)
 
-if submitted and user_input:
-    response = get_response(user_input)
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    st.session_state.chat_history.append({
-        "timestamp": timestamp,
-        "user": user_input,
-        "bot": response
-    })
-    log_chat(user_input, response)
+@app.route('/chat', methods=['POST'])  # ✅ Only POST, not OPTIONS
+def get_response():
+    data = request.get_json()
+    user_input = data.get("message", "")
 
-# ✅ Render Chat History (fixed size container)
-st.markdown("### 💬 Chat History")
+    if not user_input:
+        return jsonify({"response": "Please provide a valid message."})
 
-# CSS for styling scrollable chat box
-st.markdown("""
-<style>
-.chat-container {
-    height: 400px;
-    overflow-y: auto;
-    background-color: #f5f5f5;
-    padding: 1rem;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    margin-bottom: 1.5rem;
-}
-.chat-entry {
-    margin-bottom: 1.2rem;
-}
-.chat-timestamp {
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 0.2rem;
-}
-.chat-user {
-    background-color: #DCF8C6;
-    padding: 0.6rem;
-    border-radius: 10px;
-    margin-bottom: 0.3rem;
-    white-space: pre-wrap;
-}
-.chat-bot {
-    background-color: #E5E5EA;
-    padding: 0.6rem;
-    border-radius: 10px;
-    white-space: pre-wrap;
-}
-</style>
-<div class="chat-container">
-""", unsafe_allow_html=True)
+    input_embedding = embed([user_input])
+    similarities = np.inner(input_embedding, question_embeddings)[0]
+    best_match = np.argmax(similarities)
+    bot_response = responses[best_match]
 
-# Render each chat message in container
-for entry in st.session_state.chat_history:
-    st.markdown(f"""
-    <div class='chat-entry'>
-        <div class='chat-timestamp'>{entry['timestamp']}</div>
-        <div class='chat-user'><strong>You:</strong> {entry['user']}</div>
-        <div class='chat-bot'><strong>Bot:</strong> {entry['bot']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    return jsonify({"response": bot_response})
 
-st.markdown("</div>", unsafe_allow_html=True)
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
