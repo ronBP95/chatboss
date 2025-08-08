@@ -1,5 +1,6 @@
-flask
-flask-cors
-tensorflow-hub
-protobuf>=6.0.0,<7.0.0
-numpy
+Flask==2.3.3
+flask-cors==4.0.0
+tensorflow-cpu==2.15.0
+tensorflow-hub==0.15.0
+protobuf==3.20.3
+numpy==1.24.3
