@@ -5,8 +5,6 @@ import numpy as np
 from data import pairs
 
 app = Flask(__name__)
-
-# ✅ Correct and simple CORS setup
 CORS(app)
 
 # Load embedding model
@@ -17,7 +15,7 @@ questions = [q for q, a in pairs]
 responses = [a for q, a in pairs]
 question_embeddings = embed(questions)
 
-@app.route('/chat', methods=['POST'])  # ✅ Only POST, not OPTIONS
+@app.route('/chat', methods=['POST'])
 def get_response():
     data = request.get_json()
     user_input = data.get("message", "")
@@ -33,4 +31,4 @@ def get_response():
     return jsonify({"response": bot_response})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=10000)
