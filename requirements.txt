@@ -1,6 +1,5 @@
 flask
 flask-cors
-tensorflow-cpu==2.19.0
 tensorflow-hub
 protobuf>=6.0.0,<7.0.0
 numpy
