@@ -1,4 +1,4 @@
-tensorflow
+flask
+flask-cors
 tensorflow-hub
-streamlit
 numpy
